@@ -1,10 +1,12 @@
 package ${package}.entity.${moduleName};
 
 
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.htwz.datasource.entity.Entity;
+##import com.baomidou.mybatisplus.annotation.TableName;
+##import com.htwz.datasource.entity.Entity;
+##import lombok.EqualsAndHashCode;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 
 #if(${hasBigDecimal})
 import java.math.BigDecimal;

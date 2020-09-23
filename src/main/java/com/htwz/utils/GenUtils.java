@@ -27,7 +27,7 @@ import java.util.zip.ZipOutputStream;
  * @date 2016年12月19日 下午11:40:24
  */
 public class GenUtils {
-    
+
     public static List<String> getTemplates() {
         List<String> templates = new ArrayList<String>();
         templates.add("template/Entity.java.vm");
@@ -41,10 +41,10 @@ public class GenUtils {
 
 //        templates.add("template/index.vue.vm");
 //        templates.add("template/add-or-update.vue.vm");
-        
+
         return templates;
     }
-    
+
     /**
      * 生成代码
      */
@@ -62,7 +62,7 @@ public class GenUtils {
         tableEntity.setClassName(className);
         tableEntity.setClassname(StringUtils.uncapitalize(className));
         String excludeTableFiled = config.getString("excludeTableFiled");
-        
+
         //列信息
         List<ColumnEntity> columsList = new ArrayList<>();
         for (Map<String, String> column : columns) {
@@ -71,12 +71,12 @@ public class GenUtils {
             columnEntity.setDataType(column.get("dataType"));
             columnEntity.setComments(column.get("columnComment"));
             columnEntity.setExtra(column.get("extra"));
-            
+
             //列名转换成Java属性名
             String attrName = columnToJava(columnEntity.getColumnName());
             columnEntity.setAttrName(attrName);
             columnEntity.setAttrname(StringUtils.uncapitalize(attrName));
-            
+
             //列的数据类型，转换成Java类型
             String attrType = config.getString(columnEntity.getDataType(), "unknowType");
             columnEntity.setAttrType(attrType);
@@ -88,18 +88,18 @@ public class GenUtils {
                 tableEntity.setPk(columnEntity);
             }
             //去掉公共的字段
-            if (StringUtils.isNotBlank(columnEntity.getColumnName()) && excludeTableFiled.contains(columnEntity.getColumnName())) {
-                continue;
-            }
+//            if (StringUtils.isNotBlank(columnEntity.getColumnName()) && excludeTableFiled.contains(columnEntity.getColumnName())) {
+//                continue;
+//            }
             columsList.add(columnEntity);
         }
         tableEntity.setColumns(columsList);
-        
+
         //没主键，则第一个字段为主键
         if (tableEntity.getPk() == null) {
             tableEntity.setPk(tableEntity.getColumns().get(0));
         }
-        
+
         //设置velocity资源加载器
         Properties prop = new Properties();
         prop.put("file.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
@@ -123,7 +123,7 @@ public class GenUtils {
         map.put("email", config.getString("email"));
         map.put("datetime", DateUtils.format(new Date(), DateUtils.DATE_TIME_PATTERN));
         VelocityContext context = new VelocityContext(map);
-    
+
         Integer outFileType = config.getInt("outFileType");
         //获取模板列表
         List<String> templates = getTemplates();
@@ -134,19 +134,19 @@ public class GenUtils {
             tpl.merge(context, sw);
            if(outFileType == 1){
                outFileToTarget(modelName, config, tableEntity, template, sw);
-               
+
            }else {
                downloadFile(zip, modelName, config, tableEntity, template, sw);
            }
-           
+
         }
     }
-    
+
     private static void outFileToTarget(String modelName, Configuration config, TableEntity tableEntity, String template, StringWriter sw) {
         String filePath = getFileName(template, tableEntity.getClassName(), config.getString("package"), modelName);
-        
+
         File file = createFile(filePath);
-        
+
         FileOutputStream fileOutputStream = null;
         try {
             fileOutputStream = new FileOutputStream(file);
@@ -158,7 +158,7 @@ public class GenUtils {
             System.out.println("模板 [ " + template + " ] 解析错误");
         }
     }
-    
+
     private static void downloadFile(ZipOutputStream zip, String modelName, Configuration config, TableEntity tableEntity, String template, StringWriter sw) {
         try {
             //添加到zip
@@ -170,22 +170,22 @@ public class GenUtils {
             throw new RRException("渲染模板失败，表名：" + tableEntity.getTableName(), e);
         }
     }
-    
-    
+
+
     /**
      * 列名转换成Java属性名
      */
     public static String columnToJava(String columnName) {
         return WordUtils.capitalizeFully(columnName, new char[]{'_'}).replace("_", "");
     }
-    
+
     /**
      * 表名转换成Java类名
      */
     public static String tableToJava(String tableName, String tablePrefix) {
         boolean removeProfix = getConfig().getBoolean("removePrefix");
-       
-    
+
+
         if (removeProfix) {
             int indexFirstLine = tableName.indexOf("_");
             tableName = tableName.substring(indexFirstLine);
@@ -195,7 +195,7 @@ public class GenUtils {
         }
         return columnToJava(tableName);
     }
-    
+
     /**
      * 获取配置信息
      */
@@ -206,7 +206,7 @@ public class GenUtils {
             throw new RRException("获取配置文件失败，", e);
         }
     }
-    
+
     /**
      * 获取文件名
      */
@@ -219,48 +219,48 @@ public class GenUtils {
         }else {
              packagePath = "main" + File.separator + "java" + File.separator;
         }
-    
-        
-        
+
+
+
         if (StringUtils.isNotBlank(packageName)) {
             packagePath += packageName.replace(".", File.separator) + File.separator;
         }
-        
-        
+
+
         if (template.contains("Entity.java.vm")) {
             return packagePath + "models" + File.separator + "entity" + File.separator + moduleName + File.separator + className + ".java";
         }
-        
+
         if (template.contains("query.java.vm")) {
             return packagePath + "models" + File.separator + "request" + File.separator + moduleName + File.separator + className + "Request.java";
         }
-        
+
         if (template.contains("Dao.java.vm")) {
             return packagePath + "dao" + File.separator + moduleName + File.separator + className + "Mapper.java";
         }
-        
+
         if (template.contains("Service.java.vm")) {
             return packagePath + "service" + File.separator + moduleName + File.separator + className + "Service.java";
         }
-        
+
         if (template.contains("ServiceImpl.java.vm")) {
             return packagePath + "service" + File.separator + moduleName + File.separator + "impl" + File.separator + className + "ServiceImpl.java";
         }
-        
+
         if (template.contains("Controller.java.vm")) {
             return packagePath + "controller" + File.separator + moduleName + File.separator + className + "Controller.java";
         }
-        
+
         if (template.contains("Dao.xml.vm")) {
             return packagePath + "dao" + File.separator + moduleName + File.separator + className + "Mapper.xml";
-            
+
         }
-        
-        
+
+
         return null;
     }
-    
-    
+
+
     /**
      * 创建多级目录文件
      *
@@ -278,12 +278,12 @@ public class GenUtils {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            
+
             return file;
         }
-        
+
         return null;
     }
-    
-    
+
+
 }
